@@ -5,6 +5,7 @@ import fs from 'node:fs'
 import url from 'node:url'
 import path from 'node:path'
 import { spawnSync } from 'node:child_process'
+import * as readline from 'node:readline/promises'
 import cheerio from 'cheerio'
 
 const tempFile = path.join(os.tmpdir(), 'upmovies.tmp')
@@ -25,7 +26,7 @@ const search = async () => {
 
   const results = $('.itemInfo')
   if (results.length === 0) {
-    console.log('Nothing found, try another search term')
+    console.log('[info] Nothing found, try another search term')
     process.exit(0)
   }
 
@@ -48,10 +49,7 @@ const search = async () => {
 async function main() {
 
   const chosenLink = await search()
-  if (!chosenLink) {
-    console.log('no link selected, exiting')
-    process.exit(1)
-  }
+  if (!chosenLink) process.exit(1)
 
   const downLinks = []
   const isSeries = chosenLink.includes('season')
@@ -82,27 +80,31 @@ async function main() {
         const episode = downLink.split('/')[5].split('.')[0].replace('episode-', 'E')
         const ytLink = `"${iframeLink}" -o "${title}${episode}.mp4"`
         vidUrls.push(ytLink)
-        console.log(`yt-dlp ${ytLink}`)
       } else {
         const title = downLink.split('/')[4].split('-').slice(1).join('_').replace('.html', '')
         const download = spawnSync(`yt-dlp "${iframeLink}" -o "${title}.mp4"`, {
+          // stdout has to be inherit here
           stdio: ['inherit', 'inherit', 'inherit'],
           shell: true,
-          encoding: 'utf-8'
+          eletncoding: 'utf-8'
         })
       }
-
     })
   }
   if (isSeries) {
     fs.writeFileSync(tempFile, vidUrls.join('\n'))
-//     console.log(`All lines written to ${tempFile}`)
-    console.log(`${vidUrl.lengtg} episodes in this season`)
-    console.log(`\nUse 'sed' like selection to choose episodes to download: (eg. "4p;5p;10,22p" to download files 1,5 and 10-22`)
-//     console.log(`\nUse 'xargs -tL 1 -a ${tempFile} yt-dlp' to download all, or`)
-//     console.log(`Use 'sed -n "1,22p" ${tempFile} | xargs -tl yt-dlp' to download files between 1-22`)
-//     console.log(`Use 'sed -n "1p;5p;10,22p" ${tempFile} | xargs -tl yt-dlp' to download files 1,5 and 10-22`)
-    const download = spawnSync(`yt-dlp "${iframeLink}" -o "${title}.mp4"`, {
+    console.log(`[info] ${vidUrls.length} episodes in this season`)
+    console.log(`[info] Use 'sed' like selection to choose episodes to download: (eg. "4p;5p;10,22p" to download files 1,5 and 10-22`)
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    })
+    let chosenEps =  `1,${vidUrls.length}p`
+    const question =  '[????]'
+    const answer = await rl.question(`${question} (press enter to choose all) > `)
+    rl.close()
+    if (answer) chosenEps = answer
+    const download = spawnSync(`sed -n "${chosenEps}" ${tempFile} | xargs -tl yt-dlp`, {
       stdio: ['inherit', 'inherit', 'inherit'],
       shell: true,
       encoding: 'utf-8'
