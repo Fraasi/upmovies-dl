@@ -36,6 +36,7 @@ const search = async () => {
   })
 
   const fzf = spawnSync(`echo "${urls}" | fzf`, {
+    // stdout has to be pipe here
     stdio: ['inherit', 'pipe', 'inherit'],
     shell: true,
     encoding: 'utf-8'
@@ -84,17 +85,28 @@ async function main() {
         console.log(`yt-dlp ${ytLink}`)
       } else {
         const title = downLink.split('/')[4].split('-').slice(1).join('_').replace('.html', '')
-        console.log(`yt-dlp "${iframeLink}" -o "${title}.mp4"`)
+        const download = spawnSync(`yt-dlp "${iframeLink}" -o "${title}.mp4"`, {
+          stdio: ['inherit', 'inherit', 'inherit'],
+          shell: true,
+          encoding: 'utf-8'
+        })
       }
 
     })
   }
   if (isSeries) {
     fs.writeFileSync(tempFile, vidUrls.join('\n'))
-    console.log(`All lines written to ${tempFile}`)
-    console.log(`\nUse 'xargs -tL 1 -a ${tempFile} yt-dlp' to download all, or`)
-    console.log(`Use 'sed -n "1,22p" ${tempFile} | xargs -tl yt-dlp' to download files between 1-22`)
-    console.log(`Use 'sed -n "1p;5p;10,22p" ${tempFile} | xargs -tl yt-dlp' to download files 1,5 and 10-22`)
+//     console.log(`All lines written to ${tempFile}`)
+    console.log(`${vidUrl.lengtg} episodes in this season`)
+    console.log(`\nUse 'sed' like selection to choose episodes to download: (eg. "4p;5p;10,22p" to download files 1,5 and 10-22`)
+//     console.log(`\nUse 'xargs -tL 1 -a ${tempFile} yt-dlp' to download all, or`)
+//     console.log(`Use 'sed -n "1,22p" ${tempFile} | xargs -tl yt-dlp' to download files between 1-22`)
+//     console.log(`Use 'sed -n "1p;5p;10,22p" ${tempFile} | xargs -tl yt-dlp' to download files 1,5 and 10-22`)
+    const download = spawnSync(`yt-dlp "${iframeLink}" -o "${title}.mp4"`, {
+      stdio: ['inherit', 'inherit', 'inherit'],
+      shell: true,
+      encoding: 'utf-8'
+    })
   }
 }
 
