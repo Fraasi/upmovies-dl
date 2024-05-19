@@ -30,13 +30,15 @@ const search = async () => {
     process.exit(0)
   }
 
-  let urls = ''
+  let fzfLines = ''
   results.each((i, el) => {
     const href = $(el).find('.title > a').attr('href')
-    urls += href + '\n'
+    const title = $(el).find('.title > a').text().replace(/ /g, '_')
+    const year = $(el).find('.file-info :nth-child(5)').text().split(':')[1].trim()
+    fzfLines += `${title} [${year}] ${href}\n`
   })
 
-  const fzf = spawnSync(`echo "${urls}" | fzf`, {
+  const fzf = spawnSync(`echo "${fzfLines}" | fzf --with-nth 1,2 | cut -d' ' -f3`, {
     // stdout has to be pipe here
     stdio: ['inherit', 'pipe', 'inherit'],
     shell: true,
@@ -66,35 +68,42 @@ async function main() {
     downLinks.push(chosenLink)
   }
 
+  function zeroPad(n) { return Number(n) < 10 ? '0' + n : n }
   const vidUrls = []
 
   for (const downLink of downLinks) {
     await fetch(downLink).then(res => res.text()).then(html => {
       const $1 = cheerio.load(html)
-      const src = Buffer.from(($1('.player-iframe').text()).match(/\".*\"/)[0], 'base64')
+      const src = Buffer.from(($1('.player-iframe').text()).match(/".*"/)[0], 'base64')
       const $2 = cheerio.load(src)
       const iframeLink = $2('iframe').attr('src')
+      const releaseYear = $1('.about > .features > ul > li:nth-child(5)').text().split(':')[1].trim()
 
       if (isSeries) {
-        const title = downLink.split('/')[4].split('-').slice(1).join('_').replace('season_', 'S')
-        const episode = downLink.split('/')[5].split('.')[0].replace('episode-', 'E')
-        const ytLink = `"${iframeLink}" -o "${title}${episode}.mp4"`
+        const year = downLink.includes(releaseYear) ? '' : `${releaseYear}`
+        const splitUrl = downLink.split('/')
+        const title = splitUrl[4].split('-').slice(1,-2).join('_')
+        const seasonNum = splitUrl[4].split('-').at(-1)
+        const episodeNum = splitUrl[5].split('-')[1].replace('.html', '')
+        const ytLink = `"${iframeLink}" -o "${title}_${year}_S${zeroPad(seasonNum)}E${zeroPad(episodeNum)}.mp4"`
         vidUrls.push(ytLink)
       } else {
         const title = downLink.split('/')[4].split('-').slice(1).join('_').replace('.html', '')
-        const download = spawnSync(`yt-dlp "${iframeLink}" -o "${title}.mp4"`, {
+        const year = title.includes(releaseYear) ? '' : `_${releaseYear}`
+        spawnSync(`yt-dlp "${iframeLink}" -o "${title}${year}.mp4"`, {
           // stdout has to be inherit here
           stdio: ['inherit', 'inherit', 'inherit'],
           shell: true,
-          eletncoding: 'utf-8'
+          encoding: 'utf-8'
         })
       }
     })
   }
   if (isSeries) {
     fs.writeFileSync(tempFile, vidUrls.join('\n'))
-    console.log(`[info] ${vidUrls.length} episodes in this season`)
-    console.log(`[info] Use 'sed' like selection to choose episodes to download: (eg. "4p;5p;10,22p" to download files 1,5 and 10-22`)
+    const seasonNum = vidUrls[0].match(/S([0-9]{2})E/)[1]
+    console.log(`[info] there are ${vidUrls.length} episodes in season ${seasonNum}`)
+    console.log(`[info] Use 'sed' like selection to choose what episodes to download (eg. "1p;5p;10,22p" to download episodes 1 5 and 10-22)`)
     const rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
@@ -104,7 +113,7 @@ async function main() {
     const answer = await rl.question(`${question} (press enter to choose all) > `)
     rl.close()
     if (answer) chosenEps = answer
-    const download = spawnSync(`sed -n "${chosenEps}" ${tempFile} | xargs -tl yt-dlp`, {
+    spawnSync(`sed -n "${chosenEps}" ${tempFile} | xargs -tl yt-dlp`, {
       stdio: ['inherit', 'inherit', 'inherit'],
       shell: true,
       encoding: 'utf-8'
