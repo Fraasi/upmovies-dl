@@ -37,8 +37,10 @@ const search = async () => {
     const year = $(el).find('.file-info :nth-child(5)').text().split(':')[1].trim()
     fzfLines += `${title} [${year}] ${href}\n`
   })
+  // remove trailing \n
+  fzfLines = fzfLines.replace(/\n$/, '')
 
-  const fzf = spawnSync(`echo "${fzfLines}" | fzf --with-nth 1,2 | cut -d' ' -f3`, {
+  const fzf = spawnSync(`echo "${fzfLines}" | fzf --cycle --with-nth 1,2 | cut -d' ' -f3`, {
     // stdout has to be pipe here
     stdio: ['inherit', 'pipe', 'inherit'],
     shell: true,
@@ -102,7 +104,7 @@ async function main() {
   if (isSeries) {
     fs.writeFileSync(tempFile, vidUrls.join('\n'))
     const seasonNum = vidUrls[0].match(/S([0-9]{2})E/)[1]
-    console.log(`[info] there are ${vidUrls.length} episodes in season ${seasonNum}`)
+    console.log(`[info] there are ${vidUrls.length} episodes in season ${seasonNum.replace(/^0/, '')}`)
     console.log(`[info] Use 'sed' like selection to choose what episodes to download (eg. "1p;5p;10,22p" to download episodes 1 5 and 10-22)`)
     const rl = readline.createInterface({
       input: process.stdin,
