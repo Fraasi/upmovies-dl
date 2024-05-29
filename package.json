@@ -1,7 +1,7 @@
 {
-  "name": "node_scripts",
+  "name": "upmovies-dl",
   "version": "1.0.0",
-  "description": "some random node scripts",
+  "description": "select & download from upmovies cli",
   "type": "module",
   "main": "-",
   "scripts": {
