@@ -84,7 +84,7 @@ async function main() {
       if (isSeries) {
         const year = downLink.includes(releaseYear) ? '' : `${releaseYear}`
         const splitUrl = downLink.split('/')
-        const title = splitUrl[4].split('-').slice(1,-2).join('_')
+        const title = splitUrl[4].split('-').slice(1, -2).join('_')
         const seasonNum = splitUrl[4].split('-').at(-1)
         const episodeNum = splitUrl[5].split('-')[1].replace('.html', '')
         const ytLink = `"${iframeLink}" -o "${title}_${year}_S${zeroPad(seasonNum)}E${zeroPad(episodeNum)}.mp4"`
@@ -110,8 +110,8 @@ async function main() {
       input: process.stdin,
       output: process.stdout,
     })
-    let chosenEps =  `1,${vidUrls.length}p`
-    const question =  '[????]'
+    let chosenEps = `1,${vidUrls.length}p`
+    const question = '[????]'
     const answer = await rl.question(`${question} (press enter to choose all) > `)
     rl.close()
     if (answer) chosenEps = answer

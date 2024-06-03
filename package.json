@@ -1,10 +1,13 @@
 {
   "name": "upmovies-dl",
   "version": "1.0.0",
-  "description": "select & download from upmovies cli",
+  "description": "search & download from upmovies cli",
   "type": "module",
   "main": "-",
   "scripts": {
+    "tsup": "tsup upmovies-dl.js",
+    "posttsup": "mv dist/upmovies-dl.js dist/upmovies-dl && chmod +x dist/upmovies-dl",
+    "lint": "eslint upmovies-dl.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "fraasi",
@@ -16,6 +19,8 @@
     "@eslint/js": "^9.2.0",
     "eslint": "^9.2.0",
     "eslint-formatter-compact": "^8.40.0",
-    "globals": "^15.2.0"
+    "globals": "^15.2.0",
+    "tsup": "^8.1.0",
+    "typescript": "^5.4.5"
   }
 }
