@@ -35,7 +35,8 @@ const search = async () => {
     const href = $(el).find('.title > a').attr('href')
     const title = $(el).find('.title > a').text().replace(/ /g, '_')
     const year = $(el).find('.file-info :nth-child(5)').text().split(':')[1].trim()
-    fzfLines += `${title} [${year}] ${href}\n`
+    // const filmHD = $().find('div.new > p.film_hd').text()
+    fzfLines += `[${year}] ${title} ${href}\n`
   })
   // remove trailing \n
   fzfLines = fzfLines.replace(/\n$/, '')
