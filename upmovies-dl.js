@@ -88,7 +88,7 @@ async function main() {
         const title = splitUrl[4].split('-').slice(1, -2).join('_')
         const seasonNum = splitUrl[4].split('-').at(-1)
         const episodeNum = splitUrl[5].split('-')[1].replace('.html', '')
-        const ytLink = `"${iframeLink}" -o "${title}_${year}_S${zeroPad(seasonNum)}E${zeroPad(episodeNum)}.mp4"`
+        const ytLink = `"${iframeLink}" -o "${title}_S${zeroPad(seasonNum)}E${zeroPad(episodeNum)}_${year}.mp4"`
         vidUrls.push(ytLink)
       } else {
         const title = downLink.split('/')[4].split('-').slice(1).join('_').replace('.html', '')
